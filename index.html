@@ -1,0 +1,1413 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Modul Relasi & JOIN — By.Benny</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a33;
+      --panel2:#0f1730;
+      --text:#e9eeff;
+      --muted:#b7c0e2;
+      --muted2:#98a3cb;
+      --brand:#7c5cff;
+      --brand2:#37d0ff;
+      --ok:#2be0a7;
+      --warn:#ffcc66;
+      --bad:#ff6b6b;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --radius: 14px;
+      --radius2: 18px;
+    }
+    [data-theme="light"]{
+      --bg:#f6f7fb;
+      --panel:#ffffff;
+      --panel2:#f2f4ff;
+      --text:#0c1330;
+      --muted:#42507d;
+      --muted2:#5b6aa3;
+      --brand:#5a3dff;
+      --brand2:#008cff;
+      --border:rgba(12,19,48,.10);
+      --shadow: 0 10px 26px rgba(12,19,48,.12);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 800px at 20% 0%, rgba(124,92,255,.22), transparent 55%),
+                  radial-gradient(900px 700px at 90% 10%, rgba(55,208,255,.18), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+    }
+
+    .progress{
+      position:fixed; top:0; left:0; height:3px; width:0%;
+      background: linear-gradient(90deg, var(--brand), var(--brand2));
+      z-index:9999;
+      box-shadow:0 0 18px rgba(124,92,255,.45);
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      min-height:100vh;
+    }
+    @media (max-width: 980px){
+      .app{grid-template-columns:1fr}
+    }
+
+    aside{
+      position:sticky; top:0;
+      height:100vh;
+      padding:22px 18px;
+      border-right:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(18,26,51,.85), rgba(18,26,51,.55));
+      backdrop-filter: blur(10px);
+    }
+    [data-theme="light"] aside{
+      background: linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.55));
+    }
+    @media (max-width: 980px){
+      aside{position:relative; height:auto; border-right:none; border-bottom:1px solid var(--border)}
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.04);
+      box-shadow: var(--shadow);
+    }
+    [data-theme="light"] .brand{background: rgba(12,19,48,.03)}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background: linear-gradient(135deg, var(--brand), var(--brand2));
+      display:grid;place-items:center;
+      box-shadow:0 10px 25px rgba(124,92,255,.25);
+      font-weight:800;
+    }
+    .brand h1{font-size:14px; margin:0; letter-spacing:.2px}
+    .brand p{margin:2px 0 0; font-size:12px; color:var(--muted)}
+
+    .controls{
+      margin-top:14px;
+      display:flex; gap:10px; align-items:center;
+    }
+    .btn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:.2s transform, .2s background;
+      font-weight:600;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+    }
+    [data-theme="light"] .btn{background: rgba(12,19,48,.03)}
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.07)}
+    .btn:active{transform: translateY(0px)}
+
+    .search{
+      margin-top:14px;
+      padding:12px 12px;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+    [data-theme="light"] .search{background: rgba(12,19,48,.03)}
+    .search input{
+      width:100%;
+      border:none; outline:none;
+      background:transparent;
+      color:var(--text);
+      font-size:13px;
+    }
+    .search input::placeholder{color:var(--muted2)}
+
+    nav{
+      margin-top:14px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      max-height: calc(100vh - 220px);
+      overflow:auto;
+      padding-right:6px;
+    }
+    nav a{
+      text-decoration:none;
+      color:var(--muted);
+      border:1px solid transparent;
+      padding:10px 10px;
+      border-radius: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      transition:.18s;
+    }
+    nav a:hover{
+      color:var(--text);
+      border-color: var(--border);
+      background: rgba(255,255,255,.05);
+    }
+    nav a.active{
+      color:var(--text);
+      border-color: rgba(124,92,255,.45);
+      background: rgba(124,92,255,.12);
+    }
+    .tag{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted2);
+      white-space:nowrap;
+    }
+
+    main{
+      padding:26px 26px 60px;
+    }
+    @media (max-width: 980px){
+      main{padding:22px 16px 60px}
+    }
+    .hero{
+      max-width: 1100px;
+      margin: 0 auto 18px;
+      padding: 18px 18px 14px;
+      border:1px solid var(--border);
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    [data-theme="light"] .hero{
+      background: linear-gradient(180deg, rgba(90,61,255,.06), rgba(0,140,255,.03));
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 180px at 20% 0%, rgba(124,92,255,.25), transparent 65%),
+                  radial-gradient(500px 220px at 90% 10%, rgba(55,208,255,.18), transparent 70%);
+      pointer-events:none;
+    }
+    .hero .content{position:relative}
+    .hero h2{margin:0 0 6px; font-size:22px}
+    .hero p{margin:0; color:var(--muted); line-height:1.5; max-width: 92ch; font-size:13.5px}
+    .pillrow{margin-top:12px; display:flex; flex-wrap:wrap; gap:8px}
+    .pill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    section{
+      max-width: 1100px;
+      margin: 12px auto;
+      border:1px solid var(--border);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,.03);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    [data-theme="light"] section{background: rgba(255,255,255,.85)}
+    .sec-head{
+      padding:16px 16px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    }
+    [data-theme="light"] .sec-head{
+      background: linear-gradient(180deg, rgba(12,19,48,.03), rgba(12,19,48,.01));
+    }
+    .sec-head h3{margin:0; font-size:16px}
+    .sec-head .meta{color:var(--muted); font-size:12.5px; line-height:1.4}
+    .sec-body{padding:16px 16px 18px}
+    .grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 860px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:14px;
+      background: rgba(255,255,255,.03);
+    }
+    [data-theme="light"] .card{background: rgba(12,19,48,.02)}
+    .card h4{margin:0 0 6px; font-size:14px}
+    .card p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+    .note{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px dashed rgba(55,208,255,.45);
+      background: rgba(55,208,255,.08);
+      color: var(--text);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .acc{border:1px solid var(--border); border-radius: var(--radius); overflow:hidden}
+    .acc + .acc{margin-top:10px}
+    .acc button{
+      width:100%;
+      text-align:left;
+      border:none;
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:12px 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      cursor:pointer;
+      font-weight:700;
+    }
+    [data-theme="light"] .acc button{background: rgba(12,19,48,.02)}
+    .acc button span{color:var(--muted); font-weight:600}
+    .acc .panel{display:none; padding:12px 12px 14px; background: rgba(255,255,255,.01)}
+    .acc.open .panel{display:block}
+    .acc .panel p{margin:0; color:var(--muted); line-height:1.6; font-size:13.5px}
+    .acc .panel ul{margin:8px 0 0; padding-left:18px; color:var(--muted); font-size:13.5px; line-height:1.6}
+
+    pre{
+      margin:10px 0 0;
+      padding:12px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.25);
+      overflow:auto;
+      position:relative;
+    }
+    [data-theme="light"] pre{background: rgba(12,19,48,.04)}
+    code{font-family:var(--mono); font-size:12.5px; color: var(--text)}
+    .copy{
+      position:absolute;
+      top:10px; right:10px;
+      font-size:12px;
+      padding:7px 10px;
+      border-radius: 10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      cursor:pointer;
+      color:var(--text);
+      font-weight:700;
+    }
+    .copy:hover{background: rgba(255,255,255,.09)}
+    .copy:active{transform: translateY(1px)}
+    .small{font-size:12px; color:var(--muted2)}
+
+    .ex{
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:12px;
+      background: rgba(255,255,255,.02);
+    }
+    .ex + .ex{margin-top:10px}
+    .ex .top{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+    }
+    .badge{
+      font-size:11px;
+      padding:4px 9px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted2);
+      white-space:nowrap;
+    }
+    .badge.inner{border-color: rgba(124,92,255,.45); color: var(--text); background: rgba(124,92,255,.10)}
+    .badge.left{border-color: rgba(55,208,255,.45); color: var(--text); background: rgba(55,208,255,.10)}
+    .badge.cross{border-color: rgba(255,204,102,.45); color: var(--text); background: rgba(255,204,102,.10)}
+    .ex h4{margin:0; font-size:14px}
+    .ex p{margin:8px 0 0; color:var(--muted); font-size:13.5px; line-height:1.55}
+    .answer{
+      margin-top:10px;
+      border-top:1px dashed var(--border);
+      padding-top:10px;
+      display:none;
+    }
+    .answer.open{display:block}
+    .toggle-ans{
+      margin-left:auto;
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      cursor:pointer;
+      color:var(--text);
+      font-weight:700;
+    }
+
+    .quiz{
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      padding:14px;
+      background: rgba(255,255,255,.02);
+    }
+    .quiz-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+      padding-bottom:10px;
+      border-bottom:1px solid var(--border);
+    }
+    .quiz-head .small{margin:0}
+    .q{
+      padding:12px 0;
+      border-top:1px solid var(--border);
+    }
+    .q:first-child{border-top:none; padding-top:0}
+    .q h4{margin:0 0 8px; font-size:14px}
+    .opts{display:grid; gap:8px}
+    .opt{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding:10px;
+      cursor:pointer;
+      background: rgba(255,255,255,.03);
+      color:var(--muted);
+      font-size:13.5px;
+      line-height:1.45;
+      transition:.15s;
+      user-select:none;
+    }
+    .opt:hover{background: rgba(255,255,255,.06); color:var(--text)}
+    .opt.correct{border-color: rgba(43,224,167,.55); background: rgba(43,224,167,.12); color:var(--text)}
+    .opt.selected{border-color: rgba(124,92,255,.45); background: rgba(124,92,255,.10); color:var(--text)}
+    .hint{margin-top:8px; font-size:12.5px; color:var(--muted2)}
+
+    footer{
+      max-width:1100px;
+      margin: 14px auto 0;
+      padding: 14px 2px;
+      color: var(--muted2);
+      font-size: 12.5px;
+      text-align:center;
+    }
+
+    .toast{
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(0,0,0,.35);
+      color: var(--text);
+      font-size: 12.5px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: .22s opacity, .22s transform;
+      z-index: 9999;
+    }
+    [data-theme="light"] .toast{background: rgba(255,255,255,.9)}
+    .toast.show{opacity:1; transform: translateX(-50%) translateY(-4px)}
+  </style>
+</head>
+
+<body>
+  <div class="progress" id="progress"></div>
+
+  <div class="app" id="app">
+    <aside>
+      <div class="brand">
+        <div class="logo">DB</div>
+        <div>
+          <h1>Relasi & JOIN — MySQL</h1>
+          <p>Materi Dinamis untuk siswa infor</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="themeBtn" title="Ganti mode gelap/terang">
+          <span>🌓</span> Mode
+        </button>
+        <button class="btn" id="expandAllBtn" title="Buka/tutup semua accordion">
+          <span>🧩</span> Accordion
+        </button>
+      </div>
+
+      <div class="search">
+        <input id="search" type="text" placeholder="Cari materi… contoh: LEFT JOIN, NULL, foreign key" />
+      </div>
+
+      <nav id="nav">
+        <a href="#intro"><span>Pengantar & Tujuan</span><span class="tag">Mulai</span></a>
+        <a href="#fundamental"><span>Fundamental Relasional</span><span class="tag">PK/FK</span></a>
+        <a href="#dot-notation"><span>Kenapa pakai titik (.)</span><span class="tag">siswa.nama</span></a>
+        <a href="#join-core"><span>JOIN itu apa & cara kerja</span><span class="tag">Konsep</span></a>
+        <a href="#types"><span>Jenis JOIN & kapan dipakai</span><span class="tag">Inner/Left/…</span></a>
+        <a href="#examples-sekolah"><span>Contoh Query db_sekolah</span><span class="tag">Demo</span></a>
+        <a href="#latihan-sekolah"><span>Latihan Terarah db_sekolah</span><span class="tag">Wajib</span></a>
+        <a href="#tugas-kuliah"><span>Tugas Individu db_kuliah</span><span class="tag">Individu</span></a>
+        <a href="#quiz"><span>Kuis Cepat</span><span class="tag">15 Soal</span></a>
+      </nav>
+    </aside>
+
+    <main>
+      <div class="hero" id="intro">
+        <div class="content">
+          <h2>Modul Relasi & JOIN (MySQL) — Versi Benny</h2>
+          <p>
+            Hari ini kita belajar JOIN bukan sebagai “mantra SQL”, tapi sebagai cara komputer menyusun informasi dari potongan fakta.
+            Ingat: tabel menyimpan fakta kecil; JOIN menyusun fakta itu menjadi cerita yang bisa kita baca.
+          </p>
+          <div class="pillrow">
+            <span class="pill">✅ Variasi berbeda dalam belajar</span>
+            <span class="pill">🧠 Fokus pemahaman konsep</span>
+            <span class="pill">🧪 Disertai latihan menarik</span>
+            <span class="pill">📌 MySQL (XAMPP / AMPPS)</span>
+          </div>
+        </div>
+      </div>
+
+      <section id="fundamental">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 1 — Fundamental Basis Data Relasional</h3>
+            <div class="meta">Sebelum JOIN, kita harus paham kenapa data dipisah dan bagaimana tabel “berkenalan”.</div>
+          </div>
+          <div class="tag">Konsep inti</div>
+        </div>
+        <div class="sec-body">
+          <div class="grid">
+            <div class="card">
+              <h4>Kenapa data dipecah jadi banyak tabel?</h4>
+              <p>
+                Karena kalau semua data dicampur dalam satu tabel, akan terjadi pengulangan data (redundansi). Akibatnya update jadi
+                berbahaya dan rawan salah. Database relasional memecah fakta: tabel siswa menyimpan identitas, tabel kelas menyimpan data kelas,
+                tabel nilai menyimpan aktivitas penilaian, dan seterusnya.
+              </p>
+              <div class="note">
+                Prinsip penting: <b>Single Source of Truth</b> — satu informasi sebaiknya hanya disimpan di satu tempat.
+              </div>
+            </div>
+            <div class="card">
+              <h4>Primary Key (PK) dan Foreign Key (FK)</h4>
+              <p>
+                <b>Primary Key</b> adalah identitas unik untuk setiap baris (misalnya <code>id_siswa</code>).
+                <b>Foreign Key</b> adalah kolom yang menunjuk ke PK di tabel lain (misalnya <code>siswa_kelas.id_siswa</code> menunjuk ke <code>siswa.id_siswa</code>).
+              </p>
+              <div class="note">
+                Komputer lebih percaya <b>id</b> dibanding nama, karena nama bisa sama, id harus unik.
+              </div>
+            </div>
+          </div>
+
+          <div class="acc">
+            <button type="button">
+              <div>Struktur relasi pada <b>db_sekolah</b> <span>(klik untuk buka)</span></div>
+              <div>➕</div>
+            </button>
+            <div class="panel">
+              <p>Di db_sekolah, hubungan tabelnya seperti “peta jalan” berikut:</p>
+              <ul>
+                <li><b>siswa → siswa_kelas → kelas</b> (siswa berada di kelas tertentu)</li>
+                <li><b>siswa → nilai → mata_pelajaran</b> (siswa punya nilai pada mapel tertentu)</li>
+                <li><b>siswa → peminjaman → buku</b> (siswa meminjam buku tertentu)</li>
+              </ul>
+              <p class="small">Catatan: tabel <b>siswa_kelas</b>, <b>nilai</b>, dan <b>peminjaman</b> berperan sebagai “jembatan” (bridge) yang menghubungkan tabel utama.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="dot-notation">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 2 — Kenapa Menulis <code>siswa.nama</code> (Pakai Titik)?</h3>
+            <div class="meta">Ini bukan gaya-gayaan. Ini cara mencegah MySQL bingung saat banyak tabel digabung.</div>
+          </div>
+          <div class="tag">Wajib paham</div>
+        </div>
+        <div class="sec-body">
+          <div class="card">
+            <h4>Intinya begini</h4>
+            <p>
+              Saat kita melakukan JOIN, MySQL membaca beberapa tabel sekaligus. Jika dua tabel punya nama kolom yang sama
+              (misalnya sama-sama ada kolom <code>id</code> atau <code>nama</code>), maka MySQL tidak tahu kita maksud yang mana.
+              Maka kita tulis: <b>nama_tabel.nama_kolom</b>.
+            </p>
+            <div class="note">
+              Tanda titik (<b>.</b>) dibaca: “kolom ini milik tabel ini”.  
+              Jadi <code>siswa.nama</code> artinya kolom <b>nama</b> yang ada di tabel <b>siswa</b>.
+            </div>
+          </div>
+
+          <div class="card">
+            <h4>Contoh salah vs benar</h4>
+            <p class="small">Contoh “salah” (rawan error ambiguous):</p>
+            <pre><button class="copy" data-copy="SELECT nama FROM siswa INNER JOIN siswa_kelas ON siswa.id_siswa = siswa_kelas.id_siswa;">Copy</button><code>SELECT nama
+FROM siswa
+INNER JOIN siswa_kelas
+ON siswa.id_siswa = siswa_kelas.id_siswa;</code></pre>
+
+            <p class="small" style="margin-top:10px">Contoh “benar” (jelas kolom milik tabel mana):</p>
+            <pre><button class="copy" data-copy="SELECT siswa.nama FROM siswa INNER JOIN siswa_kelas ON siswa.id_siswa = siswa_kelas.id_siswa;">Copy</button><code>SELECT siswa.nama
+FROM siswa
+INNER JOIN siswa_kelas
+ON siswa.id_siswa = siswa_kelas.id_siswa;</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section id="join-core">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 3 — JOIN Itu Apa dan Cara Kerjanya</h3>
+            <div class="meta">JOIN = menggabungkan fakta dari tabel berbeda berdasarkan kecocokan kunci (PK ↔ FK).</div>
+          </div>
+          <div class="tag">Konsep</div>
+        </div>
+        <div class="sec-body">
+          <div class="grid">
+            <div class="card">
+              <h4>Analogi sederhana</h4>
+              <p>
+                Tabel itu seperti lembar daftar berbeda. Lembar “siswa” berisi siapa orangnya.
+                Lembar “kelas” berisi daftar kelas. Lembar “siswa_kelas” adalah kartu penghubung: siswa id berapa masuk kelas id berapa.
+                JOIN itu seperti menggabungkan lembar-lembar ini supaya menjadi satu informasi yang bisa dibaca.
+              </p>
+            </div>
+            <div class="card">
+              <h4>Langkah yang dilakukan komputer</h4>
+              <p>
+                Ketika JOIN, komputer:
+                (1) mengambil baris dari tabel pertama,
+                (2) mencari pasangan di tabel kedua berdasarkan kondisi <code>ON</code>,
+                (3) kalau cocok → digabung jadi satu baris hasil (result set).
+                Hasilnya bukan tabel asli, tapi “tabel sementara”.
+              </p>
+              <div class="note">
+                Bagian <code>ON ... = ...</code> adalah “aturan cocok-cocokan”-nya. Kalau salah menulis ON, hasilnya salah total.
+              </div>
+            </div>
+          </div>
+
+          <div class="acc">
+            <button type="button">
+              <div>Struktur umum query JOIN <span>(klik untuk buka)</span></div>
+              <div>➕</div>
+            </button>
+            <div class="panel">
+              <pre><button class="copy" data-copy="SELECT tabel1.kolomA, tabel2.kolomB\nFROM tabel1\nINNER JOIN tabel2\nON tabel1.kunci = tabel2.kunci;">Copy</button><code>SELECT tabel1.kolomA, tabel2.kolomB
+FROM tabel1
+INNER JOIN tabel2
+ON tabel1.kunci = tabel2.kunci;</code></pre>
+              <p class="small">Catatan: untuk pemula, sebutkan nama tabel lengkap seperti ini. Nanti kalau sudah mahir, baru belajar alias.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="types">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 4 — Jenis JOIN dan Kapan Dipakai</h3>
+            <div class="meta">Ini bagian “keputusan”: kapan pakai INNER, kapan LEFT, dan kapan CROSS.</div>
+          </div>
+          <div class="tag">Kapan dipakai</div>
+        </div>
+        <div class="sec-body">
+          <div class="grid">
+            <div class="card">
+              <h4>INNER JOIN</h4>
+              <p><b>Dipakai saat hanya ingin data yang punya pasangan.</b> Misalnya: “tampilkan siswa yang punya nilai”, “tampilkan siswa yang punya kelas”.</p>
+              <div class="note">Kata kunci soal: <b>yang memiliki</b>, <b>yang terdaftar</b>, <b>yang mengambil</b>, <b>yang pernah</b>.</div>
+            </div>
+            <div class="card">
+              <h4>LEFT JOIN</h4>
+              <p><b>Dipakai saat ingin melihat semua data utama, termasuk yang belum punya pasangan.</b> Misalnya: “siswa yang belum punya nilai”, “buku yang belum pernah dipinjam”.</p>
+              <div class="note">Kata kunci soal: <b>yang belum</b>, <b>yang tidak</b>, <b>yang belum pernah</b> → biasanya <b>LEFT JOIN + IS NULL</b>.</div>
+            </div>
+            <div class="card">
+              <h4>RIGHT JOIN</h4>
+              <p>Kebalikan LEFT JOIN. Jarang dipakai untuk pemula, karena bisa diganti dengan LEFT JOIN (tukar posisi tabel).</p>
+            </div>
+            <div class="card">
+              <h4>CROSS JOIN</h4>
+              <p>Membuat semua kombinasi pasangan. Dipakai untuk simulasi/jadwal. Hati-hati karena jumlah baris bisa meledak.</p>
+              <div class="note">Jika A=10 baris dan B=6 baris → hasil 60 baris.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="examples-sekolah">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 5 — Contoh Query Lengkap (db_sekolah)</h3>
+            <div class="meta">Semua contoh di bawah memakai nama tabel lengkap (tanpa alias), agar mudah diikuti.</div>
+          </div>
+          <div class="tag">db_sekolah</div>
+        </div>
+        <div class="sec-body">
+          <div class="acc open">
+            <button type="button">
+              <div>1) INNER JOIN — Siswa dan Kelas <span>(klik untuk tutup/buka)</span></div>
+              <div>➖</div>
+            </button>
+            <div class="panel">
+              <p>Menampilkan siswa yang benar-benar punya kelas.</p>
+              <pre><button class="copy" data-copy="SELECT siswa.nama, kelas.nama_kelas\nFROM siswa\nINNER JOIN siswa_kelas\nON siswa.id_siswa = siswa_kelas.id_siswa\nINNER JOIN kelas\nON siswa_kelas.id_kelas = kelas.id_kelas;">Copy</button><code>SELECT siswa.nama, kelas.nama_kelas
+FROM siswa
+INNER JOIN siswa_kelas
+ON siswa.id_siswa = siswa_kelas.id_siswa
+INNER JOIN kelas
+ON siswa_kelas.id_kelas = kelas.id_kelas;</code></pre>
+            </div>
+          </div>
+
+          <div class="acc">
+            <button type="button">
+              <div>2) INNER JOIN — Siswa, Mapel, Nilai <span>(klik untuk buka)</span></div>
+              <div>➕</div>
+            </button>
+            <div class="panel">
+              <p>Menampilkan siswa yang memiliki nilai pada mata pelajaran.</p>
+              <pre><button class="copy" data-copy="SELECT siswa.nama, mata_pelajaran.nama_mapel, nilai.nilai_angka\nFROM siswa\nINNER JOIN nilai\nON siswa.id_siswa = nilai.id_siswa\nINNER JOIN mata_pelajaran\nON nilai.id_mapel = mata_pelajaran.id_mapel;">Copy</button><code>SELECT siswa.nama, mata_pelajaran.nama_mapel, nilai.nilai_angka
+FROM siswa
+INNER JOIN nilai
+ON siswa.id_siswa = nilai.id_siswa
+INNER JOIN mata_pelajaran
+ON nilai.id_mapel = mata_pelajaran.id_mapel;</code></pre>
+            </div>
+          </div>
+
+          <div class="acc">
+            <button type="button">
+              <div>3) INNER JOIN — Peminjaman Buku <span>(klik untuk buka)</span></div>
+              <div>➕</div>
+            </button>
+            <div class="panel">
+              <p>Menampilkan siswa yang pernah meminjam buku.</p>
+              <pre><button class="copy" data-copy="SELECT siswa.nama, buku.judul, peminjaman.status\nFROM siswa\nINNER JOIN peminjaman\nON siswa.id_siswa = peminjaman.id_siswa\nINNER JOIN buku\nON peminjaman.id_buku = buku.id_buku;">Copy</button><code>SELECT siswa.nama, buku.judul, peminjaman.status
+FROM siswa
+INNER JOIN peminjaman
+ON siswa.id_siswa = peminjaman.id_siswa
+INNER JOIN buku
+ON peminjaman.id_buku = buku.id_buku;</code></pre>
+            </div>
+          </div>
+
+          <div class="acc">
+            <button type="button">
+              <div>4) LEFT JOIN — Semua Siswa + Nilai (jika ada) <span>(klik untuk buka)</span></div>
+              <div>➕</div>
+            </button>
+            <div class="panel">
+              <p>Menampilkan semua siswa walaupun belum punya nilai. Jika belum ada data nilai → tampil <b>NULL</b>.</p>
+              <pre><button class="copy" data-copy="SELECT siswa.nama, nilai.nilai_angka\nFROM siswa\nLEFT JOIN nilai\nON siswa.id_siswa = nilai.id_siswa;">Copy</button><code>SELECT siswa.nama, nilai.nilai_angka
+FROM siswa
+LEFT JOIN nilai
+ON siswa.id_siswa = nilai.id_siswa;</code></pre>
+            </div>
+          </div>
+
+          <div class="acc">
+            <button type="button">
+              <div>5) LEFT JOIN + IS NULL — Buku yang belum pernah dipinjam <span>(klik untuk buka)</span></div>
+              <div>➕</div>
+            </button>
+            <div class="panel">
+              <p>Ini pola penting: <b>LEFT JOIN</b> lalu cari yang <b>NULL</b> → artinya belum punya pasangan.</p>
+              <pre><button class="copy" data-copy="SELECT buku.judul\nFROM buku\nLEFT JOIN peminjaman\nON buku.id_buku = peminjaman.id_buku\nWHERE peminjaman.id_buku IS NULL;">Copy</button><code>SELECT buku.judul
+FROM buku
+LEFT JOIN peminjaman
+ON buku.id_buku = peminjaman.id_buku
+WHERE peminjaman.id_buku IS NULL;</code></pre>
+            </div>
+          </div>
+
+          <div class="acc">
+            <button type="button">
+              <div>6) JOIN + GROUP BY — Jumlah siswa per kelas <span>(klik untuk buka)</span></div>
+              <div>➕</div>
+            </button>
+            <div class="panel">
+              <p>Kalau ingin kelas kosong tetap tampil, gunakan LEFT JOIN dari tabel <b>kelas</b>.</p>
+              <pre><button class="copy" data-copy="SELECT kelas.nama_kelas, COUNT(siswa_kelas.id_siswa) AS jumlah_siswa\nFROM kelas\nLEFT JOIN siswa_kelas\nON kelas.id_kelas = siswa_kelas.id_kelas\nGROUP BY kelas.nama_kelas;">Copy</button><code>SELECT kelas.nama_kelas, COUNT(siswa_kelas.id_siswa) AS jumlah_siswa
+FROM kelas
+LEFT JOIN siswa_kelas
+ON kelas.id_kelas = siswa_kelas.id_kelas
+GROUP BY kelas.nama_kelas;</code></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="latihan-sekolah">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 6 — Latihan Terarah (db_sekolah)</h3>
+            <div class="meta">Soal-soal ini memaksa kalian memilih JOIN yang tepat. Bukan sekadar “tampilkan data”.</div>
+          </div>
+          <div class="tag">Latihan</div>
+        </div>
+
+        <div class="sec-body">
+          <div class="ex">
+            <div class="top">
+              <h4>A1 — Siswa & Kelas (hanya yang terdaftar)</h4>
+              <span class="badge inner">INNER JOIN</span>
+              <button class="toggle-ans" data-target="ans-a1">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: tampilkan <b>nama siswa</b> dan <b>nama kelas</b>. Siswa yang belum terdaftar di kelas tidak perlu tampil.</p>
+            <div class="answer" id="ans-a1">
+              <pre><button class="copy" data-copy="SELECT siswa.nama, kelas.nama_kelas\nFROM siswa\nINNER JOIN siswa_kelas\nON siswa.id_siswa = siswa_kelas.id_siswa\nINNER JOIN kelas\nON siswa_kelas.id_kelas = kelas.id_kelas;">Copy</button><code>SELECT siswa.nama, kelas.nama_kelas
+FROM siswa
+INNER JOIN siswa_kelas
+ON siswa.id_siswa = siswa_kelas.id_siswa
+INNER JOIN kelas
+ON siswa_kelas.id_kelas = kelas.id_kelas;</code></pre>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>A2 — Nilai siswa (hanya siswa yang punya nilai)</h4>
+              <span class="badge inner">INNER JOIN</span>
+              <button class="toggle-ans" data-target="ans-a2">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: tampilkan <b>nama siswa</b>, <b>nama mapel</b>, <b>nilai angka</b>. Hanya yang punya nilai.</p>
+            <div class="answer" id="ans-a2">
+              <pre><button class="copy" data-copy="SELECT siswa.nama, mata_pelajaran.nama_mapel, nilai.nilai_angka\nFROM siswa\nINNER JOIN nilai\nON siswa.id_siswa = nilai.id_siswa\nINNER JOIN mata_pelajaran\nON nilai.id_mapel = mata_pelajaran.id_mapel;">Copy</button><code>SELECT siswa.nama, mata_pelajaran.nama_mapel, nilai.nilai_angka
+FROM siswa
+INNER JOIN nilai
+ON siswa.id_siswa = nilai.id_siswa
+INNER JOIN mata_pelajaran
+ON nilai.id_mapel = mata_pelajaran.id_mapel;</code></pre>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>A3 — Siswa yang pernah meminjam buku</h4>
+              <span class="badge inner">INNER JOIN</span>
+              <button class="toggle-ans" data-target="ans-a3">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: tampilkan <b>nama siswa</b>, <b>judul buku</b>, dan <b>status peminjaman</b>. Hanya yang pernah meminjam.</p>
+            <div class="answer" id="ans-a3">
+              <pre><button class="copy" data-copy="SELECT siswa.nama, buku.judul, peminjaman.status\nFROM siswa\nINNER JOIN peminjaman\nON siswa.id_siswa = peminjaman.id_siswa\nINNER JOIN buku\nON peminjaman.id_buku = buku.id_buku;">Copy</button><code>SELECT siswa.nama, buku.judul, peminjaman.status
+FROM siswa
+INNER JOIN peminjaman
+ON siswa.id_siswa = peminjaman.id_siswa
+INNER JOIN buku
+ON peminjaman.id_buku = buku.id_buku;</code></pre>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>B1 — Semua siswa + nilai (jika ada)</h4>
+              <span class="badge left">LEFT JOIN</span>
+              <button class="toggle-ans" data-target="ans-b1">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: tampilkan semua siswa beserta nilainya. Kalau belum ada nilai, tampilkan NULL.</p>
+            <div class="answer" id="ans-b1">
+              <pre><button class="copy" data-copy="SELECT siswa.nama, nilai.nilai_angka\nFROM siswa\nLEFT JOIN nilai\nON siswa.id_siswa = nilai.id_siswa;">Copy</button><code>SELECT siswa.nama, nilai.nilai_angka
+FROM siswa
+LEFT JOIN nilai
+ON siswa.id_siswa = nilai.id_siswa;</code></pre>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>B2 — Cari siswa yang belum punya nilai</h4>
+              <span class="badge left">LEFT JOIN</span>
+              <button class="toggle-ans" data-target="ans-b2">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: tampilkan nama siswa yang <b>belum punya nilai sama sekali</b>. Gunakan pola LEFT JOIN + IS NULL.</p>
+            <div class="answer" id="ans-b2">
+              <pre><button class="copy" data-copy="SELECT siswa.nama\nFROM siswa\nLEFT JOIN nilai\nON siswa.id_siswa = nilai.id_siswa\nWHERE nilai.id_siswa IS NULL;">Copy</button><code>SELECT siswa.nama
+FROM siswa
+LEFT JOIN nilai
+ON siswa.id_siswa = nilai.id_siswa
+WHERE nilai.id_siswa IS NULL;</code></pre>
+              <p class="small">Catatan: kita cek <code>nilai.id_siswa IS NULL</code> untuk mendeteksi tidak ada pasangan di tabel nilai.</p>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>B3 — Cari buku yang belum pernah dipinjam</h4>
+              <span class="badge left">LEFT JOIN</span>
+              <button class="toggle-ans" data-target="ans-b3">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: tampilkan judul buku yang belum pernah dipinjam oleh siapa pun.</p>
+            <div class="answer" id="ans-b3">
+              <pre><button class="copy" data-copy="SELECT buku.judul\nFROM buku\nLEFT JOIN peminjaman\nON buku.id_buku = peminjaman.id_buku\nWHERE peminjaman.id_buku IS NULL;">Copy</button><code>SELECT buku.judul
+FROM buku
+LEFT JOIN peminjaman
+ON buku.id_buku = peminjaman.id_buku
+WHERE peminjaman.id_buku IS NULL;</code></pre>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>B4 — Semua kelas + jumlah siswa (termasuk kelas kosong)</h4>
+              <span class="badge left">LEFT JOIN</span>
+              <button class="toggle-ans" data-target="ans-b4">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: tampilkan semua kelas beserta jumlah siswa di kelas tersebut. Jika tidak ada siswa, tetap tampil dengan jumlah 0.</p>
+            <div class="answer" id="ans-b4">
+              <pre><button class="copy" data-copy="SELECT kelas.nama_kelas, COUNT(siswa_kelas.id_siswa) AS jumlah_siswa\nFROM kelas\nLEFT JOIN siswa_kelas\nON kelas.id_kelas = siswa_kelas.id_kelas\nGROUP BY kelas.nama_kelas;">Copy</button><code>SELECT kelas.nama_kelas, COUNT(siswa_kelas.id_siswa) AS jumlah_siswa
+FROM kelas
+LEFT JOIN siswa_kelas
+ON kelas.id_kelas = siswa_kelas.id_kelas
+GROUP BY kelas.nama_kelas;</code></pre>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>C1 — CROSS JOIN: pasangan semua siswa dengan semua mapel</h4>
+              <span class="badge cross">CROSS JOIN</span>
+              <button class="toggle-ans" data-target="ans-c1">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: buat pasangan semua siswa dan semua mata pelajaran. Lalu jelaskan kenapa jumlah barisnya banyak.</p>
+            <div class="answer" id="ans-c1">
+              <pre><button class="copy" data-copy="SELECT siswa.nama, mata_pelajaran.nama_mapel\nFROM siswa\nCROSS JOIN mata_pelajaran;">Copy</button><code>SELECT siswa.nama, mata_pelajaran.nama_mapel
+FROM siswa
+CROSS JOIN mata_pelajaran;</code></pre>
+              <p class="small">Penjelasan: hasil = jumlah baris siswa × jumlah baris mapel.</p>
+            </div>
+          </div>
+
+          <div class="ex">
+            <div class="top">
+              <h4>D1 — Analisis: mapel dengan rata-rata nilai terendah</h4>
+              <span class="badge inner">JOIN + GROUP BY</span>
+              <button class="toggle-ans" data-target="ans-d1">Lihat Jawaban</button>
+            </div>
+            <p>Instruksi: hitung rata-rata nilai tiap mapel, lalu tampilkan mapel yang rata-ratanya paling rendah.</p>
+            <div class="answer" id="ans-d1">
+              <pre><button class="copy" data-copy="SELECT mata_pelajaran.nama_mapel, AVG(nilai.nilai_angka) AS rata_rata\nFROM mata_pelajaran\nINNER JOIN nilai\nON mata_pelajaran.id_mapel = nilai.id_mapel\nGROUP BY mata_pelajaran.nama_mapel\nORDER BY rata_rata ASC\nLIMIT 1;">Copy</button><code>SELECT mata_pelajaran.nama_mapel, AVG(nilai.nilai_angka) AS rata_rata
+FROM mata_pelajaran
+INNER JOIN nilai
+ON mata_pelajaran.id_mapel = nilai.id_mapel
+GROUP BY mata_pelajaran.nama_mapel
+ORDER BY rata_rata ASC
+LIMIT 1;</code></pre>
+            </div>
+          </div>
+
+          <div class="note" style="margin-top:12px">
+            Tips guru: kalau siswa bingung memilih JOIN, suruh mereka cari kata kunci soal:
+            <b>“yang punya”</b> → cenderung INNER JOIN; <b>“yang belum/tidak ada”</b> → LEFT JOIN + IS NULL.
+          </div>
+        </div>
+      </section>
+
+      <section id="tugas-kuliah">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 7 — Tugas Individu (db_kuliah)</h3>
+            <div class="meta">Bagian ini sengaja tanpa contoh jawaban. Tujuannya melatih kalian merancang JOIN sendiri.</div>
+          </div>
+          <div class="tag">db_kuliah</div>
+        </div>
+        <div class="sec-body">
+          <div class="card">
+            <h4>Instruksi umum</h4>
+            <p>
+              Kerjakan di database <b>db_kuliah</b>. Tulis query di file catatan, lalu jalankan di phpMyAdmin.
+              Pastikan kalian menuliskan nama tabel lengkap seperti: <code>mahasiswa.nama</code>, <code>jurusan.nama_jurusan</code>.
+            </p>
+            <div class="note">
+              Fokus penilaian: (1) ketepatan JOIN, (2) ketepatan kondisi ON, (3) ketepatan hasil.
+            </div>
+          </div>
+
+          <div class="grid" style="margin-top:12px">
+            <div class="card">
+              <h4>Soal 1–5 (Dasar–Menengah)</h4>
+              <ul style="margin:8px 0 0; padding-left:18px; color:var(--muted); line-height:1.6">
+                <li>Tampilkan nama mahasiswa, jurusan, dan fakultas.</li>
+                <li>Tampilkan mahasiswa dan mata kuliah yang diambilnya.</li>
+                <li>Tampilkan mahasiswa dan dosen pengajar mata kuliah yang diambil.</li>
+                <li>Tampilkan mahasiswa yang <b>belum mengisi KRS</b>.</li>
+                <li>Tampilkan dosen yang <b>tidak mengajar mata kuliah</b>.</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h4>Soal 6–10 (Analisis)</h4>
+              <ul style="margin:8px 0 0; padding-left:18px; color:var(--muted); line-height:1.6">
+                <li>Hitung total SKS tiap mahasiswa.</li>
+                <li>Tampilkan mahasiswa dengan total SKS terbanyak.</li>
+                <li>Tampilkan jurusan dengan jumlah mahasiswa terbanyak.</li>
+                <li>Tampilkan daftar mahasiswa yang mendapat nilai <b>A</b>.</li>
+                <li>Tampilkan mata kuliah yang diambil kurang dari 2 mahasiswa.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="quiz">
+        <div class="sec-head">
+          <div>
+            <h3>Bab 8 — Kuis Cepat (15 Soal)</h3>
+            <div class="meta">Aturan: jika jawaban salah, pilihan akan di-reset dan kamu tidak ditunjukkan kunci jawaban. Coba lagi.</div>
+          </div>
+          <div class="tag">Quiz</div>
+        </div>
+        <div class="sec-body">
+          <div class="quiz" id="quizBox">
+            <div class="quiz-head">
+              <div>
+                <b>Skor:</b> <span id="score">0</span>/15
+                <p class="small" style="margin:6px 0 0;">Tips: cari kata “yang belum/tidak ada” → biasanya LEFT JOIN + IS NULL.</p>
+              </div>
+              <button class="btn" id="resetQuizBtn" type="button" title="Reset semua jawaban kuis">
+                ♻️ Reset Kuis
+              </button>
+            </div>
+
+            <!-- Q1 -->
+            <div class="q" data-correct="2">
+              <h4>1) Soal: “Tampilkan siswa yang <b>belum punya nilai</b>.” JOIN apa yang paling tepat?</h4>
+              <div class="opts">
+                <div class="opt">INNER JOIN saja</div>
+                <div class="opt">CROSS JOIN</div>
+                <div class="opt">LEFT JOIN + IS NULL</div>
+                <div class="opt">RIGHT JOIN selalu</div>
+              </div>
+              <div class="hint">Kata “belum” biasanya berarti kita mencari pasangan yang tidak ada.</div>
+            </div>
+
+            <!-- Q2 -->
+            <div class="q" data-correct="0">
+              <h4>2) Kenapa kita sering menulis <code>siswa.nama</code> bukan hanya <code>nama</code>?</h4>
+              <div class="opts">
+                <div class="opt">Agar MySQL tidak bingung saat banyak tabel punya kolom bernama sama</div>
+                <div class="opt">Supaya query jadi lebih panjang</div>
+                <div class="opt">Karena wajib untuk semua query, walau tanpa JOIN</div>
+                <div class="opt">Karena MySQL tidak bisa membaca nama kolom tanpa titik</div>
+              </div>
+              <div class="hint">Istilah error yang sering muncul: “ambiguous column”.</div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="q" data-correct="1">
+              <h4>3) CROSS JOIN paling cocok untuk?</h4>
+              <div class="opts">
+                <div class="opt">Mencari data yang tidak punya pasangan (NULL)</div>
+                <div class="opt">Membuat semua kombinasi pasangan antar tabel</div>
+                <div class="opt">Menghapus data ganda otomatis</div>
+                <div class="opt">Menggabungkan tabel tanpa hasil bertambah</div>
+              </div>
+              <div class="hint">Jumlah baris hasil = perkalian jumlah baris dua tabel.</div>
+            </div>
+
+            <!-- Q4 -->
+            <div class="q" data-correct="3">
+              <h4>4) “Tampilkan siswa yang <b>pernah</b> meminjam buku.” JOIN yang paling tepat?</h4>
+              <div class="opts">
+                <div class="opt">LEFT JOIN</div>
+                <div class="opt">CROSS JOIN</div>
+                <div class="opt">RIGHT JOIN</div>
+                <div class="opt">INNER JOIN</div>
+              </div>
+              <div class="hint">Kata “pernah” berarti harus ada catatan peminjaman.</div>
+            </div>
+
+            <!-- Q5 -->
+            <div class="q" data-correct="1">
+              <h4>5) Untuk mencari “buku yang <b>belum pernah</b> dipinjam”, biasanya pola yang dipakai adalah…</h4>
+              <div class="opts">
+                <div class="opt">INNER JOIN + ORDER BY</div>
+                <div class="opt">LEFT JOIN + IS NULL</div>
+                <div class="opt">CROSS JOIN + LIMIT</div>
+                <div class="opt">RIGHT JOIN + GROUP BY</div>
+              </div>
+              <div class="hint">Cari yang “tidak punya pasangan” di tabel peminjaman.</div>
+            </div>
+
+            <!-- Q6 -->
+            <div class="q" data-correct="2">
+              <h4>6) Kolom foreign key di <code>nilai</code> yang menghubungkan ke <code>siswa</code> adalah…</h4>
+              <div class="opts">
+                <div class="opt">nilai.id_nilai</div>
+                <div class="opt">nilai.id_mapel</div>
+                <div class="opt">nilai.id_siswa</div>
+                <div class="opt">nilai.semester</div>
+              </div>
+              <div class="hint">FK menunjuk ke PK tabel lain.</div>
+            </div>
+
+            <!-- Q7 -->
+            <div class="q" data-correct="0">
+              <h4>7) Dalam JOIN, fungsi utama bagian <code>ON A = B</code> adalah…</h4>
+              <div class="opts">
+                <div class="opt">Menentukan aturan pasangan baris antar tabel</div>
+                <div class="opt">Mengurutkan hasil query</div>
+                <div class="opt">Membatasi jumlah baris hasil</div>
+                <div class="opt">Menghapus data yang duplikat</div>
+              </div>
+              <div class="hint">Tanpa ON yang benar, hasil JOIN bisa kacau.</div>
+            </div>
+
+            <!-- Q8 -->
+            <div class="q" data-correct="3">
+              <h4>8) Jika kalian ingin menampilkan “semua kelas, termasuk kelas yang belum ada siswanya”, JOIN yang tepat adalah…</h4>
+              <div class="opts">
+                <div class="opt">INNER JOIN dari kelas</div>
+                <div class="opt">CROSS JOIN</div>
+                <div class="opt">RIGHT JOIN tanpa alasan</div>
+                <div class="opt">LEFT JOIN dari kelas</div>
+              </div>
+              <div class="hint">Tabel utama di kiri = yang harus selalu tampil.</div>
+            </div>
+
+            <!-- Q9 -->
+            <div class="q" data-correct="1">
+              <h4>9) Hasil LEFT JOIN akan menampilkan nilai <b>NULL</b> jika…</h4>
+              <div class="opts">
+                <div class="opt">Data di kedua tabel selalu cocok</div>
+                <div class="opt">Tidak ada pasangan di tabel kanan</div>
+                <div class="opt">Query memakai ORDER BY</div>
+                <div class="opt">Ada lebih dari 2 tabel</div>
+              </div>
+              <div class="hint">NULL di sisi kanan = tidak ketemu pasangan.</div>
+            </div>
+
+            <!-- Q10 -->
+            <div class="q" data-correct="2">
+              <h4>10) Query analisis “rata-rata nilai per mata pelajaran” membutuhkan tambahan perintah…</h4>
+              <div class="opts">
+                <div class="opt">LIMIT</div>
+                <div class="opt">WHERE</div>
+                <div class="opt">GROUP BY</div>
+                <div class="opt">DISTINCT</div>
+              </div>
+              <div class="hint">Rata-rata per kelompok = agregasi per kategori.</div>
+            </div>
+
+            <!-- Q11 -->
+            <div class="q" data-correct="0">
+              <h4>11) Untuk menampilkan mapel “paling sulit” berdasarkan rata-rata terendah, setelah GROUP BY biasanya ditambah…</h4>
+              <div class="opts">
+                <div class="opt">ORDER BY rata_rata ASC</div>
+                <div class="opt">ORDER BY rata_rata DESC</div>
+                <div class="opt">HAVING rata_rata = 0</div>
+                <div class="opt">DISTINCT rata_rata</div>
+              </div>
+              <div class="hint">Terendah = ascending (kecil ke besar).</div>
+            </div>
+
+            <!-- Q12 -->
+            <div class="q" data-correct="3">
+              <h4>12) Pernyataan yang benar tentang INNER JOIN adalah…</h4>
+              <div class="opts">
+                <div class="opt">Selalu menampilkan semua data tabel kiri</div>
+                <div class="opt">Menampilkan data yang tidak punya pasangan</div>
+                <div class="opt">Sama seperti CROSS JOIN</div>
+                <div class="opt">Hanya menampilkan baris yang punya pasangan di kedua tabel</div>
+              </div>
+              <div class="hint">INNER JOIN = “yang cocok saja”.</div>
+            </div>
+
+            <!-- Q13 -->
+            <div class="q" data-correct="1">
+              <h4>13) Kalau tabel <code>siswa</code> punya 10 baris dan <code>mata_pelajaran</code> punya 6 baris, CROSS JOIN menghasilkan…</h4>
+              <div class="opts">
+                <div class="opt">16 baris</div>
+                <div class="opt">60 baris</div>
+                <div class="opt">10 baris</div>
+                <div class="opt">6 baris</div>
+              </div>
+              <div class="hint">CROSS JOIN = perkalian.</div>
+            </div>
+
+            <!-- Q14 -->
+            <div class="q" data-correct="2">
+              <h4>14) Di db_sekolah, tabel “jembatan” yang menghubungkan siswa dengan kelas adalah…</h4>
+              <div class="opts">
+                <div class="opt">kelas</div>
+                <div class="opt">nilai</div>
+                <div class="opt">siswa_kelas</div>
+                <div class="opt">mata_pelajaran</div>
+              </div>
+              <div class="hint">Bridge table menyimpan FK ke dua tabel.</div>
+            </div>
+
+            <!-- Q15 -->
+            <div class="q" data-correct="0">
+              <h4>15) Jika ingin menampilkan “siswa yang sedang meminjam buku”, kondisi yang paling tepat adalah…</h4>
+              <div class="opts">
+                <div class="opt">WHERE peminjaman.status = 'Dipinjam'</div>
+                <div class="opt">WHERE peminjaman.status = 'Kembali'</div>
+                <div class="opt">WHERE peminjaman.tanggal_kembali IS NULL selalu</div>
+                <div class="opt">Tanpa WHERE, hasil sama saja</div>
+              </div>
+              <div class="hint">Kondisi status langsung menunjukkan keadaan peminjaman.</div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        Materi ini dirancang untuk pembelajaran pemula MySQL (XAMPP/AMPPS).  
+        Kunci sukses JOIN: pahami PK/FK → tulis ON dengan benar → pilih jenis JOIN sesuai kata kunci soal.
+      </footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast">Tersalin!</div>
+
+  <script>
+    const root = document.documentElement;
+    const themeBtn = document.getElementById('themeBtn');
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    root.setAttribute('data-theme', savedTheme);
+
+    themeBtn.addEventListener('click', () => {
+      const cur = root.getAttribute('data-theme') || 'dark';
+      const next = (cur === 'dark') ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      toast(next === 'dark' ? 'Mode gelap aktif' : 'Mode terang aktif');
+    });
+
+    function setupAccordions(){
+      document.querySelectorAll('.acc').forEach(acc => {
+        const btn = acc.querySelector('button');
+        btn.addEventListener('click', () => {
+          acc.classList.toggle('open');
+          btn.querySelector('div:last-child').textContent = acc.classList.contains('open') ? '➖' : '➕';
+        });
+      });
+    }
+    setupAccordions();
+
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    let allOpen = false;
+    expandAllBtn.addEventListener('click', () => {
+      allOpen = !allOpen;
+      document.querySelectorAll('.acc').forEach(acc => {
+        acc.classList.toggle('open', allOpen);
+        const btn = acc.querySelector('button');
+        if(btn) btn.querySelector('div:last-child').textContent = allOpen ? '➖' : '➕';
+      });
+      toast(allOpen ? 'Semua accordion dibuka' : 'Semua accordion ditutup');
+    });
+
+    const toastEl = document.getElementById('toast');
+    function toast(msg){
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 1200);
+    }
+
+    document.querySelectorAll('.copy').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const text = btn.getAttribute('data-copy') || '';
+        try{
+          await navigator.clipboard.writeText(text);
+          toast('Query tersalin!');
+        }catch(e){
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          toast('Query tersalin (fallback)!');
+        }
+      });
+    });
+
+    // Toggle answer blocks (Protected)
+    // NOTE: This is client-side protection (educational/soft gate), not strong security.
+    const ANSWER_UNLOCK_KEY = 'answers_unlocked_session_v1';
+    const PASSWORD_SHA256 = '3fe289d7d1bf66596b7ccc72dd8b03bd664c7ae74f9090979638f12a8c0daa31';
+
+    async function sha256Hex(text){
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest('SHA-256', enc);
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }
+
+    function isUnlocked(){
+      return sessionStorage.getItem(ANSWER_UNLOCK_KEY) === '1';
+    }
+    function setUnlocked(){
+      sessionStorage.setItem(ANSWER_UNLOCK_KEY, '1');
+    }
+
+    async function requirePassword(){
+      if (isUnlocked()) return true;
+
+      const input = prompt('Masukkan password untuk membuka kunci jawaban:');
+      if (input === null) return false;
+
+      const inputHash = await sha256Hex(input);
+      if (inputHash === PASSWORD_SHA256){
+        setUnlocked();
+        toast('Kunci jawaban dibuka untuk sesi ini ✅');
+        return true;
+      } else {
+        toast('Password salah ❌');
+        return false;
+      }
+    }
+
+    document.querySelectorAll('.toggle-ans').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const ok = await requirePassword();
+        if (!ok) return;
+
+        const id = btn.getAttribute('data-target');
+        const el = document.getElementById(id);
+        if(!el) return;
+
+        el.classList.toggle('open');
+        btn.textContent = el.classList.contains('open') ? 'Sembunyikan' : 'Lihat Jawaban';
+      });
+    });
+
+    // Progress bar
+    const progress = document.getElementById('progress');
+    function updateProgress(){
+      const doc = document.documentElement;
+      const scrollTop = doc.scrollTop || document.body.scrollTop;
+      const scrollHeight = doc.scrollHeight - doc.clientHeight;
+      const p = scrollHeight ? (scrollTop / scrollHeight) * 100 : 0;
+      progress.style.width = p.toFixed(2) + '%';
+    }
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+
+    // Active nav link
+    const navLinks = Array.from(document.querySelectorAll('#nav a'));
+    const sections = navLinks.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+
+    const obs = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          navLinks.forEach(a => a.classList.remove('active'));
+          const link = navLinks.find(a => a.getAttribute('href') === '#' + entry.target.id);
+          if(link) link.classList.add('active');
+        }
+      });
+    }, { root: null, threshold: 0.22 });
+
+    sections.forEach(sec => obs.observe(sec));
+
+    // Search
+    const search = document.getElementById('search');
+    search.addEventListener('keydown', (e) => {
+      if(e.key !== 'Enter') return;
+      const q = search.value.trim().toLowerCase();
+      if(!q) return;
+
+      const allText = sections.map(sec => ({
+        id: sec.id,
+        text: (sec.innerText || '').toLowerCase()
+      }));
+      const hit = allText.find(x => x.text.includes(q));
+      if(hit){
+        document.getElementById(hit.id).scrollIntoView({behavior:'smooth', block:'start'});
+        toast('Loncat ke bagian: ' + hit.id);
+      } else {
+        toast('Tidak ditemukan: ' + q);
+      }
+    });
+
+    // Quiz logic (NO reveal correct on wrong; wrong resets)
+    const scoreEl = document.getElementById('score');
+    const resetQuizBtn = document.getElementById('resetQuizBtn');
+    const totalQuestions = 15;
+    let score = 0;
+
+    function setScore(n){
+      score = n;
+      scoreEl.textContent = String(score);
+    }
+
+    function clearQuestionSelection(q){
+      q.querySelectorAll('.opt').forEach(o => {
+        o.classList.remove('selected', 'correct');
+      });
+    }
+
+    function resetQuiz(){
+      setScore(0);
+      document.querySelectorAll('#quizBox .q').forEach(q => {
+        q.dataset.answered = '0';
+        clearQuestionSelection(q);
+      });
+      toast('Kuis di-reset');
+    }
+
+    resetQuizBtn.addEventListener('click', resetQuiz);
+
+    document.querySelectorAll('#quizBox .q').forEach(q => {
+      q.dataset.answered = '0';
+      const correct = parseInt(q.getAttribute('data-correct'), 10);
+      const opts = Array.from(q.querySelectorAll('.opt'));
+
+      opts.forEach((opt, idx) => {
+        opt.addEventListener('click', () => {
+          // If already answered correctly, ignore further clicks
+          if(q.dataset.answered === '1') return;
+
+          // Show selected briefly (but do not reveal correct if wrong)
+          opts.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+
+          if(idx === correct){
+            // Mark correct and lock question
+            opt.classList.remove('selected');
+            opt.classList.add('correct');
+            q.dataset.answered = '1';
+            setScore(score + 1);
+            toast('Benar ✅');
+
+            if(score + 1 === totalQuestions){
+              toast('Mantap! Semua benar 🎉');
+            }
+          } else {
+            // Wrong: reset selection after short delay, no reveal
+            toast('Salah ❌ coba lagi');
+            setTimeout(() => {
+              clearQuestionSelection(q);
+            }, 450);
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
